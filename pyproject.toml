@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "knowledgedist"
+version = "0.1.0"
+description = ""
+authors = ["Qin Haonan <qinhaonans@163.com>"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.10"
+torch = "^2.3.1"
+accelerate = "^0.31.0"
+transformers = "^4.41.2"
+datasets = "^2.19.2"
+numpy = "^1.26.4"
+pandas = "^2.2.2"
+matplotlib = "^3.9.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
