@@ -12,7 +12,7 @@ from config import parsing_finetune
 from loguru import logger
 from tqdm import tqdm
 from sklearn.metrics import f1_score
-import  json
+import json, numpy
 
 def load_model():
     config = BertConfig.from_pretrained("/home/qhn/Codes/Models/Bert-base-chinese", num_labels=26)
@@ -79,11 +79,15 @@ def main(args):
     model, optimizer, train_loader, test_loader = accelerator.prepare(model, optimizer, train_loader, test_loader)
     logger.info(f"accelerator.state: {accelerator.state}")
     
-    progress_bar_train = tqdm(range(len(train_loader)), disable=not accelerator.is_local_main_process)
+    progress_bar_train = tqdm(range(len(train_loader)), disable=not accelerator.is_local_main_process, desc="train")
     
     steps = 0
     trained_data = []
+    test_acc, test_f1 = [], []
+    trained_acc, trained_f1 = [], []
     for _, batch in enumerate(train_loader):
+        if _ == 0:
+            trained_data.append(batch)
         # 正向、反向传播
         model.train()
         optimizer.zero_grad()
@@ -92,6 +96,7 @@ def main(args):
         accelerator.backward(loss)
         
         # 更新参数
+        accelerator.wait_for_everyone()
         optimizer.step()
         lr_scheduler.step()
         progress_bar_train.update(1)
@@ -104,7 +109,7 @@ def main(args):
         model.eval()
         label_list = []
         pred_list = []
-        progress_bar_test = tqdm(range(len(test_loader)), disable=not accelerator.is_local_main_process)
+        progress_bar_test = tqdm(range(len(test_loader)), disable=not accelerator.is_local_main_process, desc="test")
         for _, valid in enumerate(test_loader):
             res = model(**valid)
             pred = res.logits.max(1)[1]
@@ -118,9 +123,47 @@ def main(args):
         accelerator.wait_for_everyone()
         micro_f1 = f1_score(label_list, pred_list, average='micro')
         accuracy = sum([float(label_list[i] == pred_list[i]) for i in range(len(label_list))]) * 1.0 / len(pred_list)
-        if accelerator.is_local_main_process:
-            logger.info(f"batch {_}: micro_f1: {micro_f1}, accuracy: {accuracy}")
         
+        # micro_f1 = accelerator.gather(micro_f1)
+        # accuracy = accelerator.gather(accuracy)
+        test_acc.append(accuracy)
+        test_f1.append(micro_f1)
+        
+        if accelerator.is_local_main_process:
+            logger.info(f"test_batch {_}: micro_f1: {micro_f1}, accuracy: {accuracy}")
+        
+        # 将训过的batch测试准确率并保存起来
+        if trained_data:
+            label_list = []
+            pred_list = []
+            progress_bar_trained = tqdm(range(len(test_loader)), disable=not accelerator.is_local_main_process, desc="trained")
+            for _, trained_batch in enumerate(trained_data):
+                res = model(**trained_batch)
+                pred = res.logits.max(1)[1]
+                
+                predictions = accelerator.gather(pred).cpu().numpy().tolist()
+                references = accelerator.gather(trained_batch['labels']).cpu().numpy().tolist()
+                
+                label_list += references
+                pred_list += predictions
+                progress_bar_trained.update(1)
+            accelerator.wait_for_everyone()
+            micro_f1 = f1_score(label_list, pred_list, average='micro')
+            accuracy = sum([float(label_list[i] == pred_list[i]) for i in range(len(label_list))]) * 1.0 / len(pred_list)
+            if accelerator.is_local_main_process:
+                logger.info(f"trained_batch {_}: micro_f1: {micro_f1}, accuracy: {accuracy}")
+                
+            # micro_f1 = accelerator.gather(micro_f1)
+            # accuracy = accelerator.gather(accuracy)
+            trained_acc.append(accuracy)
+            trained_f1.append(micro_f1)
+        # batch = accelerator.gather(batch)
+    test_acc, test_f1 = numpy.array(test_acc), numpy.array(test_f1)
+    trained_acc, trained_f1 = numpy.array(trained_acc), numpy.array(trained_f1)
+    paths = ["test_acc", "test_f1", "trained_acc", "trained_f1"]
+    datas = [test_acc, test_f1, trained_acc, trained_f1]
+    for path, data in zip(paths, datas):
+        numpy.savetxt(f"/home/qhn/Codes/Projects/KnowledgeDist/Results/{path}_on_0_batch.txt", data)
 
 if __name__ == '__main__':
     args = parsing_finetune()

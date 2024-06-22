@@ -1,6 +1,8 @@
 # 数据文件
 *.tsv
-
+*.txt
+*.json
+*.png
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
