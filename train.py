@@ -22,10 +22,10 @@ def load_model():
 
 def load_train_valid():
     data_paths = {
-        "train": "/home/qhn/Codes/Projects/KnowledgeDist/Data/engineer_train_50_bs.tsv",
-        "valid": "/home/qhn/Codes/Projects/KnowledgeDist/Data/engineer_test.tsv"
+        "train": "/home/qhn/Codes/Projects/KnowledgeDist/Data/engineer/engineer_train_50_bs.tsv",
+        "valid": "/home/qhn/Codes/Projects/KnowledgeDist/Data/engineer/engineer_test.tsv"
     }
-    label2index = json.load(open("/home/qhn/Codes/Projects/KnowledgeDist/Data/label2index.json", "r"))
+    label2index = json.load(open("/home/qhn/Codes/Projects/KnowledgeDist/Data/engineer/label2index.json", "r"))
     train_data, test_data = {"text": [],"labels": []}, {"text": [],"labels": []}
     with open(data_paths["train"], "r") as f:
         for line in f.readlines():
