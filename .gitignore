@@ -5,6 +5,9 @@
 *.png
 *.bin
 Weights
+Results
+Logs
+Data
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

@@ -32,7 +32,7 @@ def train(args):
                           weight_decay=args.weight_decay)
         model, train_loader, test_loader, optimizer = accelerator.prepare(model, train_loader, test_loader, optimizer)
         
-        progress_bar_train = tqdm(range(len(train_loader)), disable=not accelerator.is_local_main_process, desc="train")
+        progress_bar_train = tqdm(range(len(train_loader) * args.epoch), disable=not accelerator.is_local_main_process, desc="train")
         steps = 0
         model.train()
         for i in range(args.epoch):
@@ -79,14 +79,15 @@ def train(args):
         
         # 如果不是最后一个数据集，则模型在下一任务的模型文件下也保存，这样下一任务开始训练时，读取的权重就是上一任务训练好的权重
         if idx != 2:
-            model.bert.save_pretrained(f"/home/qhn/Codes/Projects/KnowledgeDist/Weights/bert_{datasets[idx + 1]}")
+            model.bert.save_pretrained(f"/home/qhn/Codes/Projects/KnowledgeDist/Weights/bert_{datasets[idx + 1]}", safe_serialization=False)
             tokenizer.save_pretrained(f"/home/qhn/Codes/Projects/KnowledgeDist/Weights/bert_{datasets[idx + 1]}")
         tokenizer.save_pretrained(f"/home/qhn/Codes/Projects/KnowledgeDist/Weights/bert_{datasets[idx]}")
-        model.bert.save_pretrained(f"/home/qhn/Codes/Projects/KnowledgeDist/Weights/bert_{datasets[idx]}")
+        model.bert.save_pretrained(f"/home/qhn/Codes/Projects/KnowledgeDist/Weights/bert_{datasets[idx]}", safe_serialization=False)
         torch.save(model.classifier.state_dict(), f"/home/qhn/Codes/Projects/KnowledgeDist/Weights/bert_{datasets[idx]}/classifier.pth")
         
         if accelerator.is_local_main_process:
             logger.info(f"test_dataset {dataset}: macro_f1: {macro_f1}, accuracy: {accuracy}")
+        del model
     
     # 保存训练结果
     df = pd.DataFrame(results)

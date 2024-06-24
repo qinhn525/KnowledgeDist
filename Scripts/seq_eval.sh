@@ -1,0 +1,1 @@
+python /home/qhn/Codes/Projects/KnowledgeDist/eval_seq.py

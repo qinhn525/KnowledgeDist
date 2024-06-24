@@ -15,7 +15,7 @@ def load_dataloader(dataset_name, tokenizer, args):
         text, label = row['abstract'], label2index[row['discipline']]
         train_data['text'].append(text)
         train_data['labels'].append(label)
-    for idx, row in train.iterrows():
+    for idx, row in test.iterrows():
         text, label = row['abstract'], label2index[row['discipline']]
         test_data['text'].append(text)
         test_data['labels'].append(label)

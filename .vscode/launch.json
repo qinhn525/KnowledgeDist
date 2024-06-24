@@ -33,6 +33,13 @@
                 "--log_path", "/home/qhn/Codes/Projects/KnowledgeDist/Logs/train_seq.log",
                 "--epoch", "5"
             ]
+        },
+        {
+            "name": "eval_seq",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "/home/qhn/Codes/Projects/KnowledgeDist/eval_seq.py",
+            "console": "integratedTerminal",
         }
     ]
 }
