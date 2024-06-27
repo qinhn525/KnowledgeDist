@@ -35,6 +35,20 @@
             ]
         },
         {
+            "name": "train_mask",
+            "type": "debugpy",
+            "request": "launch",
+            "program": "/home/qhn/.conda/envs/KnowledgeDist/bin/accelerate",
+            "console": "integratedTerminal",
+            "args": [
+                "launch", "--config_file", "/home/qhn/Codes/Projects/KnowledgeDist/Configs/accelerate_config.yaml",
+                "/home/qhn/Codes/Projects/KnowledgeDist/Trainers/train_mask.py",
+                "--max_seq_length", "256",
+                "--log_path", "/home/qhn/Codes/Projects/KnowledgeDist/Logs/train_mask.log",
+                "--epoch", "5"
+            ]
+        },
+        {
             "name": "eval_seq",
             "type": "debugpy",
             "request": "launch",
